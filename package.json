@@ -1,0 +1,24 @@
+{
+  "name": "hydroponicscontroller",
+  "version": "1.0.0",
+  "description": "",
+  "main": "ctrl.js",
+  "dependencies": {
+    "zerorpc": "^0.9.7",
+    "zmq": "^2.15.3"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ihatecsv/HydroponicsController.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ihatecsv/HydroponicsController/issues"
+  },
+  "homepage": "https://github.com/ihatecsv/HydroponicsController#readme"
+}

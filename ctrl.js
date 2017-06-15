@@ -1,4 +1,4 @@
-var http = require("http");
+var zerorpc = require("zerorpc");
 
 var getTime = function(){
 	return Math.floor(new Date().getTime()/1000);
@@ -10,38 +10,31 @@ var systemState = {
 }
 
 var updatePy = function(data){
-	var options = {
-	  hostname: 'localhost',
-	  port: 80,
-	  path: '/statusUpdate',
-	  method: 'POST',
-	  headers: {
-		  'Content-Type': 'application/json',
-	  }
-	};
-	var req = http.request(options, function(res) {
-	  console.log('Status: ' + res.statusCode);
-	  console.log('Headers: ' + JSON.stringify(res.headers));
-	  res.setEncoding('utf8');
-	  res.on('data', function (body) {
-		console.log('Body: ' + body);
-	  });
+	client.invoke("testFunc", JSON.stringify(systemState), function(error, res, more) {
+		console.log(res);
 	});
-	req.on('error', function(e) {
-	  console.log('problem with request: ' + e.message);
-	});
-	// write data to request body
-	req.write(JSON.stringify(systemState));
-	req.end();
 }
 
 var controlLoop = function(){
+	systemState.state = 1;
+	systemState.sTime = getTime();
+	updatePy();
+	console.log(systemState);
 	setTimeout(function(){
-		systemState.state = 1;
+		systemState.state = 0;
+		systemState.sTime = getTime();
 		updatePy();
+		console.log(systemState);
 		setTimeout(function(){
-			systemState.state = 0;
-			updatePy();
-		}, 300000);
-	}, 40000);
+			controlLoop();
+		}, 5000);
+	}, 2000);
 }
+
+var client = new zerorpc.Client();
+client.connect("tcp://127.0.0.1:4242");
+
+controlLoop();
+
+//300000
+//40000
