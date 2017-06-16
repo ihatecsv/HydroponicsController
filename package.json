@@ -4,9 +4,7 @@
   "description": "",
   "main": "ctrl.js",
   "dependencies": {
-    "coffee-script": "^1.12.6",
-    "oled-font-5x7": "^1.0.0",
-    "oled-ssd1306-i2c": "^1.0.6"
+    "rpi-led-control": "^0.1.2"
   },
   "devDependencies": {},
   "scripts": {
