@@ -4,7 +4,8 @@
   "description": "",
   "main": "ctrl.js",
   "dependencies": {
-    "rpi-led-control": "^0.1.2"
+    "rpi-led-control": "^0.1.2",
+    "rpio": "^0.9.16"
   },
   "devDependencies": {},
   "scripts": {
