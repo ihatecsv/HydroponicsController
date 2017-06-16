@@ -4,8 +4,9 @@
   "description": "",
   "main": "ctrl.js",
   "dependencies": {
-    "zerorpc": "^0.9.7",
-    "zmq": "^2.15.3"
+    "coffee-script": "^1.12.6",
+    "oled-font-5x7": "^1.0.0",
+    "oled-ssd1306-i2c": "^1.0.6"
   },
   "devDependencies": {},
   "scripts": {

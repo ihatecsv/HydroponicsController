@@ -7,6 +7,10 @@ from luma.core.interface.serial import i2c, spi
 from luma.core.render import canvas
 from luma.oled.device import ssd1306, ssd1325, ssd1331, sh1106
 import os.path
+import zerorpc
+import json
+
+systemState = None
 
 # rev.1 users set port=0
 # substitute spi(device=0, port=0) below if using that interface
@@ -18,9 +22,20 @@ device = ssd1306(serial)
 count = 0
 status = "Idle"
 
+statuses = ["Idle", "Flowing"]
+
 while True:
 	with canvas(device) as draw:
-		draw.text((5, 5), "Stat: " + status, fill="white")
+		draw.text((5, 5), "Stat: " + "Test", fill="white")
 		draw.text((5, 15), "Temp: " + str(count) + " " + chr(176)+ "C", fill="white")
 		draw.text((5, 25), "Flow: " + str(10000-count) + " s", fill="white")
 		count+=1
+
+class HelloRPC(object):
+	def testFunc(self, jsonString):
+		systemState = json.loads(jsonString);
+		return "Excellent"
+		
+s = zerorpc.Server(HelloRPC())
+s.bind("tcp://0.0.0.0:4242")
+s.run()
