@@ -59,13 +59,13 @@ rpio.open(lampPin, rpio.OUTPUT, rpio.LOW);
 rpio.open(pumpPin, rpio.OUTPUT, rpio.LOW);
 
 controlLoop = function(){
+	setPump(true);
 	loop1 = setTimeout(function(){
-		setPump(true);
+		setPump(false);
 		loop2 = setTimeout(function(){
-			setPump(false);
 			controlLoop();
-		}, 5000);
-	}, 2000);
+		}, 300000);
+	}, 40000);
 }
 
 app.set('view engine', 'ejs');
