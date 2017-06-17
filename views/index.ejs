@@ -7,6 +7,8 @@
 	<body>
 		<div class="container-fluid">
 			<h1>Drake's hydroponic controller</h1>
+			<h3 id="waitInfo"></h3>
+			<h3 id="floodInfo"></h3>
 			Loop<br>
 			<input type="radio" name="loop" id="loopOn"> On 
 			<input type="radio" name="loop" id="loopOff"> Off<br>
@@ -17,11 +19,12 @@
 			<input type="radio" name="pump" id="pumpOn"> On 
 			<input type="radio" name="pump" id="pumpOff"> Off<br>
 		</div>
-		<img src="/webcam" id="webcamImg">
+		<img style="-webkit-user-select: none;" src="http://192.168.0.21:8081/">
 		<script src="/socket.io/socket.io.js"></script>
 		<script src="/js/jquery-3.2.1.min.js"></script>
 		<script src="/js/bootstrap.min.js"></script>
 		<script>
+			var currentState;
 			var resetButtons = function(){
 				$("#loopOff").prop("checked", false);
 				$("#loopOn").prop("checked", false);
@@ -30,6 +33,13 @@
 				$("#lampOff").prop("checked", false);
 				$("#lampOn").prop("checked", false);
 			}
+			
+			function formatSeconds(seconds){ //https://stackoverflow.com/a/17781037
+				var date = new Date(1970,0,1);
+				date.setSeconds(seconds);
+				return date.toTimeString().replace(/.*(\d{2}:\d{2}:\d{2}).*/, "$1");
+			}
+			
 			var socket = io();
 			$( "#loopOff" ).click(function() {
 				socket.emit('loop', {state: false});
@@ -50,6 +60,7 @@
 				socket.emit('pump', {state: true});
 			});
 			socket.on('state', function(data){
+				currentState = data;
 				resetButtons();
 				if(data.loop){
 					$("#loopOn").prop("checked", true);
@@ -71,6 +82,22 @@
 				var d = new Date();
 				$('#webcamImg').attr("src", "/webcam?"+d.getTime());
 			});
+			setInterval(function(){ //quick n dirty
+				var time = new Date().getTime();
+				var floodTimeLeft = Math.floor((currentState.floodTime+currentState.floodDelay - time)/1000);
+				var waitTimeLeft = Math.floor((currentState.waitTime+currentState.waitDelay - time)/1000);
+				
+				if(floodTimeLeft > 0 && currentState.loop){
+					$("#floodInfo").html("Flooding for " + formatSeconds(floodTimeLeft));
+				}else{
+					$("#floodInfo").html("");	
+				}
+				if(waitTimeLeft > 0 && currentState.loop){
+					$("#waitInfo").html("Waiting for " + formatSeconds(waitTimeLeft));
+				}else{
+					$("#waitInfo").html("");	
+				}
+			}, 500);
 		</script>
 	</body>
 </html>

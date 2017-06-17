@@ -14,10 +14,19 @@ var loop1;
 var loop2;
 var controlLoop;
 
+function getTime(){
+	return new Date().getTime();
+}
+
 var currentState = {
 	loop: false,
 	pump: false,
-	lamp: false
+	lamp: false,
+	floodDelay: 80000,
+	waitDelay: 28800000,
+	floodTime: 0,
+	waitTime: 0,
+	time: 0
 }
 
 var setLamp = function(state){
@@ -51,7 +60,18 @@ var setLoop = function(state){
 	updateState();
 }
 
+var updateFloodTime = function(time){
+	currentState.floodTime = time;
+	updateState();
+}
+
+var updateWaitTime = function(time){
+	currentState.waitTime = time;
+	updateState();
+}
+
 var updateState = function(){
+	currentState.time = getTime();
 	io.sockets.emit('state', currentState);
 }
 
@@ -60,12 +80,14 @@ rpio.open(pumpPin, rpio.OUTPUT, rpio.LOW);
 
 controlLoop = function(){
 	setPump(true);
+	updateFloodTime(getTime());
 	loop1 = setTimeout(function(){
 		setPump(false);
+		updateWaitTime(getTime());
 		loop2 = setTimeout(function(){
 			controlLoop();
-		}, 300000);
-	}, 40000);
+		}, currentState.waitDelay);
+	}, currentState.floodDelay);
 }
 
 app.set('view engine', 'ejs');
@@ -113,6 +135,6 @@ io.on('connection', function(socket){
 	});
 });
 
-http.listen(8080, function(){
-  console.log('listening on *:8080');
+http.listen(3000, function(){
+  console.log('listening on *:3000');
 });
