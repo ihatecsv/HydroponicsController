@@ -1,24 +1,20 @@
 {
   "name": "hydroponicscontroller",
-  "version": "1.0.0",
-  "description": "",
-  "main": "ctrl.js",
-  "dependencies": {
-    "rpi-led-control": "^0.1.2",
-    "rpio": "^0.9.16"
-  },
-  "devDependencies": {},
+  "version": "0.0.0",
+  "private": true,
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node ./bin/www"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/ihatecsv/HydroponicsController.git"
-  },
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/ihatecsv/HydroponicsController/issues"
-  },
-  "homepage": "https://github.com/ihatecsv/HydroponicsController#readme"
+  "dependencies": {
+    "body-parser": "~1.17.1",
+    "cookie-parser": "~1.4.3",
+    "debug": "~2.6.3",
+    "ejs": "~2.5.6",
+    "express": "~4.15.2",
+    "morgan": "~1.8.1",
+    "rpi-led-control": "^0.1.2",
+    "rpio": "^0.9.16",
+    "serve-favicon": "~2.4.2",
+    "socket.io": "^2.0.3"
+  }
 }

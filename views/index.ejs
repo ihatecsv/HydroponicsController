@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Drake's hydroponic controller</title>
+		<link rel="stylesheet" href="/css/bootstrap.min.css">
+	</head>
+	<body>
+		<div class="container-fluid">
+			<h1>Drake's hydroponic controller</h1>
+			Loop<br>
+			<input type="radio" name="loop" id="loopOn"> On 
+			<input type="radio" name="loop" id="loopOff"> Off<br>
+			Lamp<br>
+			<input type="radio" name="lamp" id="lampOn"> On 
+			<input type="radio" name="lamp" id="lampOff"> Off<br>
+			Pump<br>
+			<input type="radio" name="pump" id="pumpOn"> On 
+			<input type="radio" name="pump" id="pumpOff"> Off<br>
+		</div>
+		<img src="/webcam" id="webcamImg">
+		<script src="/socket.io/socket.io.js"></script>
+		<script src="/js/jquery-3.2.1.min.js"></script>
+		<script src="/js/bootstrap.min.js"></script>
+		<script>
+			var resetButtons = function(){
+				$("#loopOff").prop("checked", false);
+				$("#loopOn").prop("checked", false);
+				$("#pumpOff").prop("checked", false);
+				$("#pumpOn").prop("checked", false);
+				$("#lampOff").prop("checked", false);
+				$("#lampOn").prop("checked", false);
+			}
+			var socket = io();
+			$( "#loopOff" ).click(function() {
+				socket.emit('loop', {state: false});
+			});
+			$( "#loopOn" ).click(function() {
+				socket.emit('loop', {state: true});
+			});
+			$( "#lampOff" ).click(function() {
+				socket.emit('lamp', {state: false});
+			});
+			$( "#lampOn" ).click(function() {
+				socket.emit('lamp', {state: true});
+			});
+			$( "#pumpOff" ).click(function() {
+				socket.emit('pump', {state: false});
+			});
+			$( "#pumpOn" ).click(function() {
+				socket.emit('pump', {state: true});
+			});
+			socket.on('state', function(data){
+				resetButtons();
+				if(data.loop){
+					$("#loopOn").prop("checked", true);
+				}else{
+					$("#loopOff").prop("checked", true);
+				}
+				if(data.pump){
+					$("#pumpOn").prop("checked", true);
+				}else{
+					$("#pumpOff").prop("checked", true);
+				}
+				if(data.lamp){
+					$("#lampOn").prop("checked", true);
+				}else{
+					$("#lampOff").prop("checked", true);
+				}
+			});
+			socket.on('photoAvailable', function(){
+				var d = new Date();
+				$('#webcamImg').attr("src", "/webcam?"+d.getTime());
+			});
+		</script>
+	</body>
+</html>
