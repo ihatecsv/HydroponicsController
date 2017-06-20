@@ -12,20 +12,32 @@ var lampPin = 11;
 
 var loop1;
 var loop2;
-var controlLoop;
+var loop3;
+var loop4;
+var pumpControlLoop;
+var lampControlLoop;
 
 function getTime(){
 	return new Date().getTime();
 }
 
 var currentState = {
-	loop: false,
+	pumpLoop: false,
+	lampLoop: false,
 	pump: false,
 	lamp: false,
-	floodDelay: 80000,
-	waitDelay: 28800000,
-	floodTime: 0,
-	waitTime: 0,
+	pumpDelay: 85000,
+	pumpWaitDelay: 28800000,
+	
+	lampDelay: 57600000,
+	lampWaitDelay: 28800000,
+	
+	pumpTime: 0,
+	pumpWaitTime: 0,
+	
+	lampTime: 0,
+	lampWaitTime: 0,
+	
 	time: 0
 }
 
@@ -49,10 +61,10 @@ var setPump = function(state){
 	updateState();
 }
 
-var setLoop = function(state){
-	currentState.loop = state;
+var setPumpLoop = function(state){
+	currentState.pumpLoop = state;
 	if(state){
-		controlLoop();
+		pumpControlLoop();
 	}else{
 		clearTimeout(loop1);
 		clearTimeout(loop2);
@@ -60,13 +72,34 @@ var setLoop = function(state){
 	updateState();
 }
 
-var updateFloodTime = function(time){
-	currentState.floodTime = time;
+var setLampLoop = function(state){
+	currentState.lampLoop = state;
+	if(state){
+		lampControlLoop();
+	}else{
+		clearTimeout(loop3);
+		clearTimeout(loop4);
+	}
 	updateState();
 }
 
-var updateWaitTime = function(time){
-	currentState.waitTime = time;
+var updatePumpTime = function(time){
+	currentState.pumpTime = time;
+	updateState();
+}
+
+var updatePumpWaitTime = function(time){
+	currentState.pumpWaitTime = time;
+	updateState();
+}
+
+var updateLampTime = function(time){
+	currentState.lampTime = time;
+	updateState();
+}
+
+var updateLampWaitTime = function(time){
+	currentState.lampWaitTime = time;
 	updateState();
 }
 
@@ -78,16 +111,28 @@ var updateState = function(){
 rpio.open(lampPin, rpio.OUTPUT, rpio.LOW);
 rpio.open(pumpPin, rpio.OUTPUT, rpio.LOW);
 
-controlLoop = function(){
+pumpControlLoop = function(){
 	setPump(true);
-	updateFloodTime(getTime());
+	updatePumpTime(getTime());
 	loop1 = setTimeout(function(){
 		setPump(false);
-		updateWaitTime(getTime());
+		updatePumpWaitTime(getTime());
 		loop2 = setTimeout(function(){
-			controlLoop();
-		}, currentState.waitDelay);
-	}, currentState.floodDelay);
+			pumpControlLoop();
+		}, currentState.pumpWaitDelay);
+	}, currentState.pumpDelay);
+}
+
+lampControlLoop = function(){
+	setLamp(true);
+	updateLampTime(getTime());
+	loop3 = setTimeout(function(){
+		setLamp(false);
+		updateLampWaitTime(getTime());
+		loop4 = setTimeout(function(){
+			lampControlLoop();
+		}, currentState.lampWaitDelay);
+	}, currentState.lampDelay);
 }
 
 app.set('view engine', 'ejs');
@@ -130,8 +175,11 @@ io.on('connection', function(socket){
 	socket.on('pump', function(data){
 		setPump(data.state);
 	});
-	socket.on('loop', function(data){
-		setLoop(data.state);
+	socket.on('pumpLoop', function(data){
+		setPumpLoop(data.state);
+	});
+	socket.on('lampLoop', function(data){
+		setLampLoop(data.state);
 	});
 });
 

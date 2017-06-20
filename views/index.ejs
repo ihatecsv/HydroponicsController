@@ -7,11 +7,16 @@
 	<body>
 		<div class="container-fluid">
 			<h1>Drake's hydroponic controller</h1>
-			<h3 id="waitInfo"></h3>
-			<h3 id="floodInfo"></h3>
-			Loop<br>
-			<input type="radio" name="loop" id="loopOn"> On 
-			<input type="radio" name="loop" id="loopOff"> Off<br>
+			<h3 id="pumpWaitInfo"></h3>
+			<h3 id="pumpInfo"></h3>
+			<h3 id="lampWaitInfo"></h3>
+			<h3 id="lampInfo"></h3>
+			Lamp loop<br>
+			<input type="radio" name="lampLoop" id="lampLoopOn"> On 
+			<input type="radio" name="lampLoop" id="lampLoopOff"> Off<br>
+			Pump loop<br>
+			<input type="radio" name="pumpLoop" id="pumpLoopOn"> On 
+			<input type="radio" name="pumpLoop" id="pumpLoopOff"> Off<br>
 			Lamp<br>
 			<input type="radio" name="lamp" id="lampOn"> On 
 			<input type="radio" name="lamp" id="lampOff"> Off<br>
@@ -19,15 +24,18 @@
 			<input type="radio" name="pump" id="pumpOn"> On 
 			<input type="radio" name="pump" id="pumpOff"> Off<br>
 		</div>
-		<img style="-webkit-user-select: none;" src="http://192.168.0.21:8081/">
+		<img style="-webkit-user-select: none;" id="webcam">
 		<script src="/socket.io/socket.io.js"></script>
 		<script src="/js/jquery-3.2.1.min.js"></script>
 		<script src="/js/bootstrap.min.js"></script>
 		<script>
+			$("#webcam").attr("src", "//" + window.location.hostname + ":8081");
 			var currentState;
 			var resetButtons = function(){
-				$("#loopOff").prop("checked", false);
-				$("#loopOn").prop("checked", false);
+				$("#lampLoopOff").prop("checked", false);
+				$("#lampLoopOn").prop("checked", false);
+				$("#pumpLoopOff").prop("checked", false);
+				$("#pumpLoopOn").prop("checked", false);
 				$("#pumpOff").prop("checked", false);
 				$("#pumpOn").prop("checked", false);
 				$("#lampOff").prop("checked", false);
@@ -41,11 +49,17 @@
 			}
 			
 			var socket = io();
-			$( "#loopOff" ).click(function() {
-				socket.emit('loop', {state: false});
+			$( "#lampLoopOff" ).click(function() {
+				socket.emit('lampLoop', {state: false});
 			});
-			$( "#loopOn" ).click(function() {
-				socket.emit('loop', {state: true});
+			$( "#lampLoopOn" ).click(function() {
+				socket.emit('lampLoop', {state: true});
+			});
+			$( "#pumpLoopOff" ).click(function() {
+				socket.emit('pumpLoop', {state: false});
+			});
+			$( "#pumpLoopOn" ).click(function() {
+				socket.emit('pumpLoop', {state: true});
 			});
 			$( "#lampOff" ).click(function() {
 				socket.emit('lamp', {state: false});
@@ -62,10 +76,15 @@
 			socket.on('state', function(data){
 				currentState = data;
 				resetButtons();
-				if(data.loop){
-					$("#loopOn").prop("checked", true);
+				if(data.pumpLoop){
+					$("#pumpLoopOn").prop("checked", true);
 				}else{
-					$("#loopOff").prop("checked", true);
+					$("#pumpLoopOff").prop("checked", true);
+				}
+				if(data.lampLoop){
+					$("#lampLoopOn").prop("checked", true);
+				}else{
+					$("#lampLoopOff").prop("checked", true);
 				}
 				if(data.pump){
 					$("#pumpOn").prop("checked", true);
@@ -84,18 +103,33 @@
 			});
 			setInterval(function(){ //quick n dirty
 				var time = new Date().getTime();
-				var floodTimeLeft = Math.floor((currentState.floodTime+currentState.floodDelay - time)/1000);
-				var waitTimeLeft = Math.floor((currentState.waitTime+currentState.waitDelay - time)/1000);
 				
-				if(floodTimeLeft > 0 && currentState.loop){
-					$("#floodInfo").html("Flooding for " + formatSeconds(floodTimeLeft));
+				var pumpTimeLeft = Math.floor((currentState.pumpTime+currentState.pumpDelay - time)/1000);
+				var pumpWaitTimeLeft = Math.floor((currentState.pumpWaitTime+currentState.pumpWaitDelay - time)/1000);
+				
+				var lampTimeLeft = Math.floor((currentState.lampTime+currentState.lampDelay - time)/1000);
+				var lampWaitTimeLeft = Math.floor((currentState.lampWaitTime+currentState.lampWaitDelay - time)/1000);
+				
+				if(pumpTimeLeft > 0 && currentState.pumpLoop){
+					$("#pumpInfo").html("Pumping for " + formatSeconds(pumpTimeLeft));
 				}else{
-					$("#floodInfo").html("");	
+					$("#pumpInfo").html("");	
 				}
-				if(waitTimeLeft > 0 && currentState.loop){
-					$("#waitInfo").html("Waiting for " + formatSeconds(waitTimeLeft));
+				if(pumpWaitTimeLeft > 0 && currentState.pumpLoop){
+					$("#pumpWaitInfo").html("Waiting for " + formatSeconds(pumpWaitTimeLeft));
 				}else{
-					$("#waitInfo").html("");	
+					$("#pumpWaitInfo").html("");	
+				}
+				
+				if(lampTimeLeft > 0 && currentState.lampLoop){
+					$("#lampInfo").html("Lamp on for " + formatSeconds(lampTimeLeft));
+				}else{
+					$("#lampInfo").html("");	
+				}
+				if(lampWaitTimeLeft > 0 && currentState.lampLoop){
+					$("#lampWaitInfo").html("Lamp off for " + formatSeconds(lampWaitTimeLeft));
+				}else{
+					$("#lampWaitInfo").html("");	
 				}
 			}, 500);
 		</script>
