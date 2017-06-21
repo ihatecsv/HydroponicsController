@@ -27,7 +27,7 @@ var currentState = {
 	pump: false,
 	lamp: false,
 	pumpDelay: 85000,
-	pumpWaitDelay: 28800000,
+	pumpWaitDelay: 21600000,
 	
 	lampDelay: 57600000,
 	lampWaitDelay: 28800000,

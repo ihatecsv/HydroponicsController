@@ -24,12 +24,12 @@
 			<input type="radio" name="pump" id="pumpOn"> On 
 			<input type="radio" name="pump" id="pumpOff"> Off<br>
 		</div>
-		<img style="-webkit-user-select: none;" id="webcam">
+		<!--<img style="-webkit-user-select: none;" id="webcam">-->
 		<script src="/socket.io/socket.io.js"></script>
 		<script src="/js/jquery-3.2.1.min.js"></script>
 		<script src="/js/bootstrap.min.js"></script>
 		<script>
-			$("#webcam").attr("src", "//" + window.location.hostname + ":8081");
+			//$("#webcam").attr("src", "//" + window.location.hostname + ":8081");
 			var currentState;
 			var resetButtons = function(){
 				$("#lampLoopOff").prop("checked", false);
@@ -116,7 +116,7 @@
 					$("#pumpInfo").html("");	
 				}
 				if(pumpWaitTimeLeft > 0 && currentState.pumpLoop){
-					$("#pumpWaitInfo").html("Waiting for " + formatSeconds(pumpWaitTimeLeft));
+					$("#pumpWaitInfo").html("Pump waiting for " + formatSeconds(pumpWaitTimeLeft));
 				}else{
 					$("#pumpWaitInfo").html("");	
 				}
