@@ -1,5 +1,4 @@
 var express = require('express');
-var rpio = require('rpio');
 var exec = require('child_process').exec;
 
 var app = express();
@@ -9,6 +8,15 @@ var io = require('socket.io')(http);
 
 var pumpPin = 13;
 var lampPin = 11;
+
+var testMode = false;
+
+if(testMode){
+	var rpio = {};
+	rpio.open = function(a, b, c, d){}
+}else{
+	var rpio = require('rpio');
+}
 
 var loop1;
 var loop2;
