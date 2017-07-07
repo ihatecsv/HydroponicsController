@@ -11,7 +11,7 @@ var io = require('socket.io')(http);
 var pumpPin = 13;
 var lampPin = 11;
 
-var testMode = false;
+var testMode = true;
 
 if(testMode){
 	rpio = {};

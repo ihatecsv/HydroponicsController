@@ -7,6 +7,13 @@
 	<body>
 		<div class="container-fluid">
 			<h1>Drake's hydroponic controller</h1>
+			<svg width="300" height="300">
+				<circle cx="150" cy="150" r="100"></circle>
+				<path id="dayTime" fill="none" stroke="#F5C151" stroke-width="20" />
+				<path id="nightTime" fill="none" stroke="#2C485D" stroke-width="20" />
+				<path id="currentTime" fill="none" stroke="#FFFFFF" stroke-width="20" />
+				<path id="pumpTime" fill="none" stroke="#0000FF" stroke-width="10" />
+			</svg>
 			<h3 id="pumpWaitInfo"></h3>
 			<h3 id="pumpInfo"></h3>
 			<h3 id="lampWaitInfo"></h3>
@@ -28,6 +35,63 @@
 		<script src="/socket.io/socket.io.js"></script>
 		<script src="/js/jquery-3.2.1.min.js"></script>
 		<script src="/js/bootstrap.min.js"></script>
+		<script>
+		
+		var sunrise = "2017-07-07T08:33:44+00:00";
+		var sunset = "2017-07-08T00:21:25+00:00";
+		
+		var sunriseDate = new Date(sunrise);
+		var sunsetDate = new Date(sunset);
+		var currentDate = new Date();
+		
+		var sunriseSecs = sunriseDate.getSeconds() + (60 * (sunriseDate.getMinutes() + (60 * sunriseDate.getHours())));
+		var sunsetSecs = sunsetDate.getSeconds() + (60 * (sunsetDate.getMinutes() + (60 * sunsetDate.getHours())));
+		var currentSecs = currentDate.getSeconds() + (60 * (currentDate.getMinutes() + (60 * currentDate.getHours())));
+		
+		function map(x, in_min, in_max, out_min, out_max) { //https://gist.github.com/remy/5213884
+			return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+		}
+		
+		function polarToCartesian(centerX, centerY, radius, angleInDegrees) { //https://stackoverflow.com/a/18473154
+			var angleInRadians = (angleInDegrees-90) * Math.PI / 180.0;
+		
+			return {
+				x: centerX + (radius * Math.cos(angleInRadians)),
+				y: centerY + (radius * Math.sin(angleInRadians))
+			};
+		}
+		
+		function describeArc(x, y, radius, startAngle, endAngle){
+		
+			var start = polarToCartesian(x, y, radius, endAngle);
+			var end = polarToCartesian(x, y, radius, startAngle);
+		
+			var largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+		
+			var d = [
+				"M", start.x, start.y, 
+				"A", radius, radius, 0, largeArcFlag, 0, end.x, end.y
+			].join(" ");
+		
+			return d;       
+		}
+		
+		let sunriseDegrees = map(sunriseSecs, 0, 86400, 0, 360);
+		let sunsetDegrees = map(sunsetSecs, 0, 86400, 0, 360);
+		let currentDegrees = map(currentSecs, 0, 86400, 0, 360);
+		document.getElementById("dayTime").setAttribute("d", describeArc(150, 150, 100, sunriseDegrees, sunsetDegrees));
+		document.getElementById("nightTime").setAttribute("d", describeArc(150, 150, 100, sunsetDegrees, sunriseDegrees));
+		document.getElementById("currentTime").setAttribute("d", describeArc(150, 150, 100, currentDegrees-1, currentDegrees+1));
+		
+		let pumpDegrees = 0;
+		setInterval(function(){
+			pumpDegrees++;
+			if(pumpDegrees == 360){
+				pumpDegrees = 0;
+			}
+			document.getElementById("pumpTime").setAttribute("d", describeArc(150, 150, 120, pumpDegrees-4, pumpDegrees+4));
+		}, 10);
+		</script>
 		<script>
 			//$("#webcam").attr("src", "//" + window.location.hostname + ":8081");
 			var currentState;
