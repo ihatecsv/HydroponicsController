@@ -3,17 +3,22 @@
 	<head>
 		<title>Drake's hydroponic controller</title>
 		<link rel="stylesheet" href="/css/bootstrap.min.css">
+		<link rel="stylesheet" href="/css/bootstrap-slider.min.css">
 	</head>
 	<body>
 		<div class="container-fluid">
 			<h1>Drake's hydroponic controller</h1>
-			<svg width="300" height="300">
-				<circle cx="150" cy="150" r="100"></circle>
-				<path id="dayTime" fill="none" stroke="#F5C151" stroke-width="20" />
-				<path id="nightTime" fill="none" stroke="#2C485D" stroke-width="20" />
-				<path id="currentTime" fill="none" stroke="#FFFFFF" stroke-width="20" />
-				<path id="pumpTime" fill="none" stroke="#0000FF" stroke-width="10" />
-			</svg>
+			<div id="svgCont">
+				<svg id="dayClock" width="300" height="300">
+					<circle cx="150" cy="150" r="100"></circle>
+					<!--<path id="circlePath" fill-opacity="0" d="M 150, 150 m -125, 0 a 125,125 0 1,0 250,0 a 125,125 0 1,0 -250,0"/>-->
+					<path id="dayTime" fill="none" stroke="#F5C151" stroke-width="20" />
+					<path id="nightTime" fill="none" stroke="#2C485D" stroke-width="20" />
+					<path id="currentTime" fill="none" stroke="#FFFFFF" stroke-width="20" />
+					<path id="lampTime" fill="none" stroke-opacity="0.2" stroke="#000000" stroke-width="10" />
+				</svg>
+			</div>
+			Lamp off time: <input id="lampOffSlider" type="text" class="span2" value="" data-slider-min="0" data-slider-max="86400" data-slider-step="1800" data-slider-value="[0,86400]"/>
 			<h3 id="pumpWaitInfo"></h3>
 			<h3 id="pumpInfo"></h3>
 			<h3 id="lampWaitInfo"></h3>
@@ -35,21 +40,25 @@
 		<script src="/socket.io/socket.io.js"></script>
 		<script src="/js/jquery-3.2.1.min.js"></script>
 		<script src="/js/bootstrap.min.js"></script>
+		<script src="/js/bootstrap-slider.min.js"></script>
 		<script>
 		
-		var sunrise = "2017-07-07T08:33:44+00:00";
-		var sunset = "2017-07-08T00:21:25+00:00";
+		$("#lampOffSlider").slider();
 		
-		var sunriseDate = new Date(sunrise);
-		var sunsetDate = new Date(sunset);
-		var currentDate = new Date();
+		var cx = 150;
+		var cy = 150;
 		
-		var sunriseSecs = sunriseDate.getSeconds() + (60 * (sunriseDate.getMinutes() + (60 * sunriseDate.getHours())));
-		var sunsetSecs = sunsetDate.getSeconds() + (60 * (sunsetDate.getMinutes() + (60 * sunsetDate.getHours())));
-		var currentSecs = currentDate.getSeconds() + (60 * (currentDate.getMinutes() + (60 * currentDate.getHours())));
+		var r = 120;
+		
+		var lampOnSeconds = 61200; //5:00pm
+		var lampOffSeconds = 32400; //9:00am
 		
 		function map(x, in_min, in_max, out_min, out_max) { //https://gist.github.com/remy/5213884
 			return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+		}
+		
+		function tfToAMPM(tf){
+			return tf > 12 ? (tf - 12) : tf;
 		}
 		
 		function polarToCartesian(centerX, centerY, radius, angleInDegrees) { //https://stackoverflow.com/a/18473154
@@ -76,21 +85,46 @@
 			return d;       
 		}
 		
-		let sunriseDegrees = map(sunriseSecs, 0, 86400, 0, 360);
-		let sunsetDegrees = map(sunsetSecs, 0, 86400, 0, 360);
-		let currentDegrees = map(currentSecs, 0, 86400, 0, 360);
-		document.getElementById("dayTime").setAttribute("d", describeArc(150, 150, 100, sunriseDegrees, sunsetDegrees));
-		document.getElementById("nightTime").setAttribute("d", describeArc(150, 150, 100, sunsetDegrees, sunriseDegrees));
-		document.getElementById("currentTime").setAttribute("d", describeArc(150, 150, 100, currentDegrees-1, currentDegrees+1));
+		for(let i = 1; i <= 24; i++){
+			let timeRads = map(i, 0, 24, 0, 2*Math.PI);
+			let adjTimeRads = timeRads - Math.PI/2;
+			let x = cx + r * Math.cos(adjTimeRads)
+			let y = cy + r * Math.sin(adjTimeRads)
+			$("#dayClock").append('<text id="digit-' + i + '" x="' + x + '" y="' + y + '" font-family="Verdana" font-size="10">' + tfToAMPM(i) + '</text>');
+			$("#svgCont").html($("#svgCont").html());
+			let width = $("#digit-" + i)[0].getBBox().width;
+			let height = $("#digit-" + i)[0].getBBox().height;
+			$("#digit-" + i).attr("x",x-(width/2));
+			$("#digit-" + i).attr("y",y+(height/3));
+		}
 		
-		let pumpDegrees = 0;
-		setInterval(function(){
-			pumpDegrees++;
-			if(pumpDegrees == 360){
-				pumpDegrees = 0;
-			}
-			document.getElementById("pumpTime").setAttribute("d", describeArc(150, 150, 120, pumpDegrees-4, pumpDegrees+4));
-		}, 10);
+		$.getJSON("https://api.sunrise-sunset.org/json?lat=47.621509&lng=-65.624173&formatted=0", function( data ) {
+			var sunrise = data.results.sunrise;
+			var sunset = data.results.sunset;
+			
+			var sunriseDate = new Date(sunrise);
+			var sunsetDate = new Date(sunset);
+			var currentDate = new Date();
+			
+			var sunriseSecs = sunriseDate.getSeconds() + (60 * (sunriseDate.getMinutes() + (60 * sunriseDate.getHours())));
+			var sunsetSecs = sunsetDate.getSeconds() + (60 * (sunsetDate.getMinutes() + (60 * sunsetDate.getHours())));
+			var currentSecs = currentDate.getSeconds() + (60 * (currentDate.getMinutes() + (60 * currentDate.getHours())));
+		
+			let sunriseDegrees = map(sunriseSecs, 0, 86400, 0, 360);
+			let sunsetDegrees = map(sunsetSecs, 0, 86400, 0, 360);
+			let currentDegrees = map(currentSecs, 0, 86400, 0, 360);
+			document.getElementById("dayTime").setAttribute("d", describeArc(150, 150, 100, sunriseDegrees, sunsetDegrees));
+			document.getElementById("nightTime").setAttribute("d", describeArc(150, 150, 100, sunsetDegrees, sunriseDegrees));
+			document.getElementById("currentTime").setAttribute("d", describeArc(150, 150, 100, currentDegrees-0.5, currentDegrees+0.5));
+		
+		});
+		
+		updateLampTime(lampOnSeconds, lampOffSeconds);
+		function updateLampTime(secondsOn, secondsOff){
+			let lampOnDegrees = map(secondsOn, 0, 86400, 0, 360);
+			let lampOffDegrees = map(secondsOff, 0, 86400, 0, 360);
+			document.getElementById("lampTime").setAttribute("d", describeArc(150, 150, 120, lampOffDegrees, lampOnDegrees));
+		}
 		</script>
 		<script>
 			//$("#webcam").attr("src", "//" + window.location.hostname + ":8081");
